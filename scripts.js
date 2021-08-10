@@ -69,12 +69,12 @@ class Spectogram {
   loadImage(source) {
     this.image = new Image();
     this.image.src = source;
-    this.image.width = "auto";
-    this.image.height = this.canvas.height;
   }
 
   // Draw Spectogram
   drawImage() {
+    this.canvas.width = window.innerWidth;
+    this.image.height = this.canvas.height;
     this.ctx.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
   }
 
