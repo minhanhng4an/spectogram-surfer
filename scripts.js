@@ -24,6 +24,10 @@ class PlayTracker {
     // TODO: Will need to recalculate the playspeed
     this.pos += this.v;
   }
+
+  restart() {
+    this.pos = 0;
+  }
 }
 
 // Spectogram
@@ -121,17 +125,25 @@ let init = () => {
   spec.init();
   spec.loadImage("assets/spectogram.png");
 
+  // Handle Restart Button
+  let restartBtn = document.getElementById("restart-btn");
+  restartBtn.addEventListener("click", () => {
+    spec.playTracker.restart();
+  });
+
   // Handle Play Button
-  let playButton = document.getElementById("play-btn");
-  playButton.addEventListener("click", () => {
+  let playBtn = document.getElementById("play-btn");
+  playBtn.addEventListener("click", () => {
     spec.playTracker.run = !spec.playTracker.run; // Play Media
 
-    if (playButton.value == "Play") {
-      playButton.innerHTML = "Stop";
-      playButton.value = "Stop";
+    if (playBtn.value == "Play") {
+      playBtn.innerHTML = "Stop";
+      playBtn.value = "Stop";
+      restartBtn.disabled = true;
     } else {
-      playButton.innerHTML = "Play";
-      playButton.value = "Play";
+      playBtn.innerHTML = "Play";
+      playBtn.value = "Play";
+      restartBtn.disabled = false;
     }
   });
 };
