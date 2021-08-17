@@ -11,11 +11,13 @@ class Selection {
   }
 }
 
+let duration;
 // Play Tracker on Spectogram
 class PlayTracker {
   init() {
     this.pos = 0; // Current Position
-    this.v = 1; // Speed
+    this.v = window.innerWidth / 60 / 60; // Speed  Needs to be calculated with the length of the audio file and Canvas Width
+    console.log(`this.v`, this.v);
     this.run = false; // Play Tracker State
   }
 
@@ -33,6 +35,8 @@ class PlayTracker {
 // Spectogram
 class Spectogram {
   init() {
+    let regionList = [];
+
     // Create Canvas
     this.canvas = document.createElement("canvas");
     this.canvas.id = "spectogram";
@@ -53,6 +57,19 @@ class Spectogram {
 
     this.canvas.addEventListener("mouseup", () => {
       this.mousedown = false;
+      console.log(
+        `this.newSlection.start, this.newSelection.end`,
+        this.newSelection.start,
+        this.newSelection.end
+      );
+
+      let region = {
+        start: this.newSelection.start / (this.canvas.width / 60), //audio.duration
+        end: this.newSelection.end / (this.canvas.width / 60), //audio.duration
+      };
+
+      // regionList.push(this.newSelection);
+      console.log(`regionList`, region);
     });
 
     this.canvas.addEventListener("mousemove", (e) => {
@@ -103,7 +120,7 @@ class Spectogram {
 
   // Draw Play Tracker
   drawPlayTracker() {
-    this.ctx.lineWidth = 5; // Stroke Weight
+    this.ctx.lineWidth = 2; // Stroke Weight
     this.ctx.strokeStyle = "orange"; // Stroke Color
 
     this.ctx.beginPath();
@@ -125,22 +142,35 @@ let init = () => {
   spec.init();
   spec.loadImage("assets/spectogram2.png");
 
+  //Play Audio
+  let playCall = document.getElementById("playCall");
+
+  playCall.onloadedmetadata = function () {
+    duration = this.duration;
+    console.log(`duration`, duration);
+  };
+
   // Handle Restart Button
   let restartBtn = document.getElementById("restart-btn");
   restartBtn.addEventListener("click", () => {
     spec.playTracker.restart();
+    playCall.pause();
+    playCall.currentTime = 0;
   });
 
   // Handle Play Button
   let playBtn = document.getElementById("play-btn");
+
   playBtn.addEventListener("click", () => {
     spec.playTracker.run = !spec.playTracker.run; // Play Media
 
     if (playBtn.value == "Play") {
+      playCall.play();
       playBtn.innerHTML = "Stop";
       playBtn.value = "Stop";
       restartBtn.disabled = true;
     } else {
+      playCall.pause();
       playBtn.innerHTML = "Play";
       playBtn.value = "Play";
       restartBtn.disabled = false;
