@@ -123,7 +123,7 @@ let init = () => {
   // Create Spectogram
   spec = new Spectogram();
   spec.init();
-  spec.loadImage("assets/spectogram.png");
+  spec.loadImage("assets/spectogram2.png");
 
   // Handle Restart Button
   let restartBtn = document.getElementById("restart-btn");
