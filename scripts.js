@@ -2,6 +2,7 @@
 // - Allow multiple region selections
 // - Map canvas coordinate to timestamp
 // - Scroll Spectogram / Zoom In & Out
+// - Sync zoom with Play tracker
 
 // Region Selection on Spectogram
 class Selection {
@@ -12,6 +13,7 @@ class Selection {
 }
 
 let duration;
+let scale = 1;
 // Play Tracker on Spectogram
 class PlayTracker {
   init() {
@@ -41,8 +43,15 @@ class Spectogram {
     this.canvas = document.createElement("canvas");
     this.canvas.id = "spectogram";
     this.ctx = this.canvas.getContext("2d");
+    // Zoom In & Out Variables
+    this.originX = 0;
+    this.originY = 0;
 
-    this.canvas.width = window.innerWidth;
+    this.currentzoom = 5;
+    this.mousex = 0;
+    this.mousey = 0;
+
+    this.canvas.width = window.innerWidth * 2;
     this.canvas.height = 200;
 
     // Selection
@@ -57,18 +66,13 @@ class Spectogram {
 
     this.canvas.addEventListener("mouseup", () => {
       this.mousedown = false;
-      console.log(
-        `this.newSlection.start, this.newSelection.end`,
-        this.newSelection.start,
-        this.newSelection.end
-      );
-
       let region = {
+        id: Date.now(),
         start: this.newSelection.start / (this.canvas.width / 60), //audio.duration
         end: this.newSelection.end / (this.canvas.width / 60), //audio.duration
       };
 
-      // regionList.push(this.newSelection);
+      regionList.push(region);
       console.log(`regionList`, region);
     });
 
@@ -96,7 +100,13 @@ class Spectogram {
   drawImage() {
     this.canvas.width = window.innerWidth;
     this.image.height = this.canvas.height;
-    this.ctx.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.drawImage(
+      this.image,
+      0,
+      0,
+      this.canvas.width / scale,
+      this.canvas.height
+    );
   }
 
   // Draw Selection
@@ -174,6 +184,20 @@ let init = () => {
       playBtn.innerHTML = "Play";
       playBtn.value = "Play";
       restartBtn.disabled = false;
+    }
+  });
+
+  let zoomIn = document.getElementById("zoomin");
+  zoomIn.addEventListener("click", () => {
+    scale = scale - 0.1;
+  });
+
+  let zoomOut = document.getElementById("zoomout");
+  zoomOut.addEventListener("click", () => {
+    if (scale == 1) {
+      return;
+    } else {
+      scale = scale + 0.1;
     }
   });
 };
