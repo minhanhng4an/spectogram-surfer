@@ -2,6 +2,7 @@
 // - Allow multiple region selections
 // - Map canvas coordinate to timestamp
 // - Scroll Spectogram / Zoom In & Out
+// - Sync zoom with Play tracker
 
 // Region Selection on Spectogram
 class Selection {
@@ -11,11 +12,14 @@ class Selection {
   }
 }
 
+let duration;
+let scale = 1;
 // Play Tracker on Spectogram
 class PlayTracker {
   init() {
     this.pos = 0; // Current Position
-    this.v = 1; // Speed
+    this.v = window.innerWidth / 60 / 60; // Speed  Needs to be calculated with the length of the audio file and Canvas Width
+    console.log(`this.v`, this.v);
     this.run = false; // Play Tracker State
   }
 
@@ -33,12 +37,21 @@ class PlayTracker {
 // Spectogram
 class Spectogram {
   init() {
+    let regionList = [];
+
     // Create Canvas
     this.canvas = document.createElement("canvas");
     this.canvas.id = "spectogram";
     this.ctx = this.canvas.getContext("2d");
+    // Zoom In & Out Variables
+    this.originX = 0;
+    this.originY = 0;
 
-    this.canvas.width = window.innerWidth;
+    this.currentzoom = 5;
+    this.mousex = 0;
+    this.mousey = 0;
+
+    this.canvas.width = window.innerWidth * 2;
     this.canvas.height = 200;
 
     // Selection
@@ -53,6 +66,14 @@ class Spectogram {
 
     this.canvas.addEventListener("mouseup", () => {
       this.mousedown = false;
+      let region = {
+        id: Date.now(),
+        start: this.newSelection.start / (this.canvas.width / 60), //audio.duration
+        end: this.newSelection.end / (this.canvas.width / 60), //audio.duration
+      };
+
+      regionList.push(region);
+      console.log(`regionList`, region);
     });
 
     this.canvas.addEventListener("mousemove", (e) => {
@@ -79,7 +100,13 @@ class Spectogram {
   drawImage() {
     this.canvas.width = window.innerWidth;
     this.image.height = this.canvas.height;
-    this.ctx.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.drawImage(
+      this.image,
+      0,
+      0,
+      this.canvas.width / scale,
+      this.canvas.height
+    );
   }
 
   // Draw Selection
@@ -103,7 +130,7 @@ class Spectogram {
 
   // Draw Play Tracker
   drawPlayTracker() {
-    this.ctx.lineWidth = 5; // Stroke Weight
+    this.ctx.lineWidth = 2; // Stroke Weight
     this.ctx.strokeStyle = "orange"; // Stroke Color
 
     this.ctx.beginPath();
@@ -125,25 +152,52 @@ let init = () => {
   spec.init();
   spec.loadImage("assets/spectogram2.png");
 
+  //Play Audio
+  let playCall = document.getElementById("playCall");
+
+  playCall.onloadedmetadata = function () {
+    duration = this.duration;
+    console.log(`duration`, duration);
+  };
+
   // Handle Restart Button
   let restartBtn = document.getElementById("restart-btn");
   restartBtn.addEventListener("click", () => {
     spec.playTracker.restart();
+    playCall.pause();
+    playCall.currentTime = 0;
   });
 
   // Handle Play Button
   let playBtn = document.getElementById("play-btn");
+
   playBtn.addEventListener("click", () => {
     spec.playTracker.run = !spec.playTracker.run; // Play Media
 
     if (playBtn.value == "Play") {
+      playCall.play();
       playBtn.innerHTML = "Stop";
       playBtn.value = "Stop";
       restartBtn.disabled = true;
     } else {
+      playCall.pause();
       playBtn.innerHTML = "Play";
       playBtn.value = "Play";
       restartBtn.disabled = false;
+    }
+  });
+
+  let zoomIn = document.getElementById("zoomin");
+  zoomIn.addEventListener("click", () => {
+    scale = scale - 0.1;
+  });
+
+  let zoomOut = document.getElementById("zoomout");
+  zoomOut.addEventListener("click", () => {
+    if (scale == 1) {
+      return;
+    } else {
+      scale = scale + 0.1;
     }
   });
 };
